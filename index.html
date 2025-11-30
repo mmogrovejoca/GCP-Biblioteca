@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP Architect Playbook</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            /* Google Colors */
+            --g-blue: #4285F4;
+            --g-red: #EA4335;
+            --g-yellow: #FBBC05;
+            --g-green: #34A853;
+            --g-gray: #5f6368;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header & Search */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .brand .material-icons {
+            color: var(--g-blue);
+            font-size: 2rem;
+        }
+
+        .search-container {
+            flex-grow: 1;
+            max-width: 600px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 40px 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #f1f3f4;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-container input:focus {
+            background: #fff;
+            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+            border-color: transparent;
+        }
+
+        .search-container .material-icons {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 260px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-header {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: #f1f3f4;
+            color: var(--g-blue);
+        }
+
+        .nav-item.active {
+            background-color: #e8f0fe;
+            color: var(--g-blue);
+        }
+
+        .nav-item .count {
+            margin-left: auto;
+            background: #f1f3f4;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-item.active .count {
+            background: #fff;
+            color: var(--g-blue);
+        }
+
+        /* Content Area */
+        main {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: transparent;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .tag.Gobierno { background: #E8F0FE; color: var(--g-blue); }
+        .tag.FinOps { background: #FCE8E6; color: var(--g-red); }
+        .tag.Ingeniería { background: #E6F4EA; color: var(--g-green); }
+        .tag.Computo { background: #E6F4EA; color: var(--g-green); }
+        .tag.Datos { background: #FEF7E0; color: var(--g-yellow); }
+        .tag.Networking { background: #E8F0FE; color: #1A73E8; }
+        .tag.Seguridad { background: #3c4043; color: #fff; }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .architect-note {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--g-blue);
+            padding: 1rem;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .architect-note strong {
+            display: block;
+            color: var(--g-blue);
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* Empty State */
+        .no-results {
+            text-align: center;
+            width: 100%;
+            grid-column: 1 / -1;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results .material-icons {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--border-color);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body { height: auto; overflow: auto; }
+            .container { flex-direction: column; overflow: visible; }
+            aside { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); padding: 0.5rem; white-space: nowrap; overflow-x: auto; display: flex; }
+            .nav-header { display: none; }
+            .nav-item { border-radius: 20px; margin-right: 0.5rem; padding: 6px 16px; }
+            .nav-item .count { display: none; }
+            header { flex-direction: column; gap: 1rem; padding: 1rem; }
+            .search-container { width: 100%; margin: 0; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <span class="material-icons">cloud_circle</span>
+            GCP Playbook
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar por servicio, concepto o keyword...">
+            <span class="material-icons">search</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside id="sidebar">
+            <!-- Navigation will be injected here -->
+        </aside>
+
+        <main>
+            <div id="contentGrid" class="grid">
+                <!-- Cards will be injected here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // DATA STORE (The "Brain")
+        // ==========================================
+        const gcpData = [
+            // --- GOBIERNO ---
+            {
+                id: 1,
+                category: "Gobierno",
+                title: "Resource Hierarchy",
+                description: "La estructura base de GCP: Organización -> Carpetas -> Proyectos -> Recursos. Es fundamental para la herencia de políticas y control de acceso.",
+                bestPractice: "Utiliza Carpetas (Folders) para reflejar unidades de negocio o entornos (Prod, Dev). Nunca asignes permisos directamente a nivel de Organización a usuarios individuales, usa Grupos.",
+                tags: ["iam", "organization", "projects", "folders"]
+            },
+            {
+                id: 2,
+                category: "Gobierno",
+                title: "IAM Best Practices",
+                description: "Identity and Access Management controla quién puede hacer qué en qué recursos. El error más común es el exceso de permisos.",
+                bestPractice: "Aplica el Principio de Menor Privilegio (PoLP). Evita roles primitivos (Owner, Editor, Viewer). Usa Roles Predefinidos y Custom Roles solo cuando sea estrictamente necesario.",
+                tags: ["security", "access", "roles", "polp"]
+            },
+            {
+                id: 3,
+                category: "Gobierno",
+                title: "Organization Policies",
+                description: "Proporciona control centralizado y programático sobre los recursos de la nube. Restringe configuraciones a nivel de recurso.",
+                bestPractice: "Define 'Constraints' globales al inicio. Ej: Restringir ubicaciones de recursos (Location Restriction) o inhabilitar la creación de claves de cuentas de servicio externas.",
+                tags: ["compliance", "constraints", "security"]
+            },
+
+            // --- FINOPS ---
+            {
+                id: 4,
+                category: "FinOps",
+                title: "Billing Export to BigQuery",
+                description: "Permite un análisis granular de costos exportando los logs de facturación a BigQuery.",
+                bestPractice: "Actívalo desde el DÍA 1. Los datos no son retroactivos. Úsalo para crear dashboards personalizados en Looker Studio y detectar anomalías de costos por etiqueta.",
+                tags: ["cost", "billing", "bigquery", "analytics"]
+            },
+            {
+                id: 5,
+                category: "FinOps",
+                title: "Budgets & Alerts",
+                description: "Mecanismo para monitorear el gasto contra un presupuesto definido y enviar notificaciones.",
+                bestPractice: "Vincula las alertas a un tópico de Pub/Sub para automatizar acciones (ej: apagar recursos de desarrollo si se supera el 100% del presupuesto) usando Cloud Functions.",
+                tags: ["cost", "automation", "alerts", "pubsub"]
+            },
+
+            // --- INGENIERÍA / CÓMPUTO ---
+            {
+                id: 6,
+                category: "Computo",
+                title: "GKE vs Cloud Run",
+                description: "GKE es Kubernetes gestionado (mayor control). Cloud Run es Serverless para contenedores (mayor simplicidad).",
+                bestPractice: "Empieza con Cloud Run si tu app es stateless y orientada a eventos/web. Mueve a GKE si necesitas GPUs, protocolos de red complejos o persistencia de estado complicada.",
+                tags: ["kubernetes", "serverless", "containers", "docker"]
+            },
+            {
+                id: 7,
+                category: "Computo",
+                title: "App Engine (Standard vs Flexible)",
+                description: "PaaS original de Google. Standard escala a 0 y es muy rápido. Flexible usa contenedores Docker.",
+                bestPractice: "Para aplicaciones legacy o monolitos, App Engine sigue siendo viable, pero para nuevos desarrollos, prefiere Cloud Run por su portabilidad y modelo de precios.",
+                tags: ["paas", "web", "scaling"]
+            },
+            {
+                id: 8,
+                category: "Computo",
+                title: "Compute Engine (GCE) Spot VMs",
+                description: "Máquinas virtuales con grandes descuentos pero que pueden ser interrumpidas por Google.",
+                bestPractice: "Úsalas solo para cargas de trabajo tolerantes a fallos (batch processing, renderizado, nodos GKE secundarios). Configura scripts de apagado para guardar estado.",
+                tags: ["iaas", "vm", "cost-saving"]
+            },
+
+            // --- DATOS ---
+            {
+                id: 9,
+                category: "Datos",
+                title: "BigQuery Optimization",
+                description: "Data Warehouse serverless. Los costos pueden dispararse si las queries escanean demasiados datos.",
+                bestPractice: "SIEMPRE usa tablas particionadas (por fecha/tiempo) y clústeres. Evita 'SELECT *'. Usa vistas materializadas para agregaciones comunes.",
+                tags: ["analytics", "sql", "performance", "cost"]
+            },
+            {
+                id: 10,
+                category: "Datos",
+                title: "Dataflow",
+                description: "Servicio de procesamiento de datos stream y batch basado en Apache Beam.",
+                bestPractice: "Usa Flex Templates para reutilizar pipelines. Habilita Dataflow Prime para auto-tuning de recursos y gestión vertical de memoria en workers.",
+                tags: ["etl", "streaming", "apache-beam"]
+            },
+            {
+                id: 11,
+                category: "Datos",
+                title: "Cloud Storage Classes",
+                description: "Standard, Nearline, Coldline, Archive. Diferentes costos de almacenamiento y acceso.",
+                bestPractice: "Configura 'Lifecycle Policies' para mover objetos automáticamente a clases más frías después de X días. No uses Archive para backups que necesitas restaurar frecuentemente.",
+                tags: ["storage", "buckets", "lifecycle"]
+            },
+
+            // --- NETWORKING ---
+            {
+                id: 12,
+                category: "Networking",
+                title: "VPC Design & Subnets",
+                description: "La red virtual global. Las subredes son regionales.",
+                bestPractice: "Usa el modo 'Custom' al crear VPCs para tener control total sobre los rangos IP. Evita superposiciones de IP si planeas conectar con on-premise o VPC Peering.",
+                tags: ["vpc", "ip-addressing", "infrastructure"]
+            },
+            {
+                id: 13,
+                category: "Networking",
+                title: "Shared VPC",
+                description: "Permite compartir una red VPC (Host Project) con otros proyectos (Service Projects).",
+                bestPractice: "Es el estándar para organizaciones medianas/grandes. Centraliza la administración de red y seguridad (firewalls) mientras delega la gestión de recursos a los equipos de desarrollo.",
+                tags: ["vpc", "organization", "governance"]
+            },
+            {
+                id: 14,
+                category: "Networking",
+                title: "VPC Peering vs VPN",
+                description: "Peering conecta dos VPCs de Google privadamente. VPN conecta VPC con redes externas u otras nubes.",
+                bestPractice: "El Peering no es transitivo. Si A conecta con B y B con C, A no ve a C. Usa Network Connectivity Center o VPN HA para topologías más complejas (Hub & Spoke).",
+                tags: ["connectivity", "hybrid", "routing"]
+            },
+            {
+                id: 15,
+                category: "Networking",
+                title: "Cloud Load Balancing",
+                description: "Balanceo de carga global a través de una sola IP Anycast.",
+                bestPractice: "Usa HTTP(S) Load Balancer global para servir contenido cerca del usuario (CDN integrado). Usa Internal Load Balancer para microservicios internos.",
+                tags: ["performance", "cdn", "scale"]
+            },
+
+            // --- SEGURIDAD ---
+            {
+                id: 16,
+                category: "Seguridad",
+                title: "VPC Service Controls",
+                description: "Perímetro de seguridad alrededor de los servicios API de Google (como BigQuery o Storage).",
+                bestPractice: "Esencial para mitigar la exfiltración de datos. Configura perímetros para asegurar que los datos solo se acceden desde redes autorizadas, incluso con credenciales válidas.",
+                tags: ["security", "perimeter", "dlp"]
+            }
+        ];
+
+        // ==========================================
+        // APP LOGIC
+        // ==========================================
+
+        // State
+        let currentCategory = 'All';
+        let searchTerm = '';
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const contentGrid = document.getElementById('contentGrid');
+        const searchInput = document.getElementById('searchInput');
+
+        // Initialize
+        function init() {
+            renderSidebar();
+            renderContent();
+            setupEventListeners();
+        }
+
+        // Render Sidebar Categories
+        function renderSidebar() {
+            // Get unique categories and counts
+            const categories = ['All', ...new Set(gcpData.map(item => item.category))];
+
+            const html = `
+                <div class="nav-header">Categorías</div>
+                ${categories.map(cat => {
+                    const count = cat === 'All'
+                        ? gcpData.length
+                        : gcpData.filter(d => d.category === cat).length;
+
+                    return `
+                        <div class="nav-item ${cat === currentCategory ? 'active' : ''}"
+                             onclick="setCategory('${cat}')">
+                            <span>${cat === 'All' ? 'Ver Todo' : cat}</span>
+                            <span class="count">${count}</span>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+
+            sidebar.innerHTML = html;
+        }
+
+        // Render Main Content
+        function renderContent() {
+            // Filter Data
+            const filteredData = gcpData.filter(item => {
+                const matchesCategory = currentCategory === 'All' || item.category === currentCategory;
+                const searchLower = searchTerm.toLowerCase();
+                const matchesSearch =
+                    item.title.toLowerCase().includes(searchLower) ||
+                    item.description.toLowerCase().includes(searchLower) ||
+                    item.bestPractice.toLowerCase().includes(searchLower) ||
+                    item.tags.some(tag => tag.toLowerCase().includes(searchLower));
+
+                return matchesCategory && matchesSearch;
+            });
+
+            // Generate HTML
+            if (filteredData.length === 0) {
+                contentGrid.innerHTML = `
+                    <div class="no-results">
+                        <span class="material-icons">sentiment_dissatisfied</span>
+                        <h2>No se encontraron resultados</h2>
+                        <p>Intenta ajustar tu búsqueda o categoría.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contentGrid.innerHTML = filteredData.map(item => `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="tag ${item.category}">${item.category}</span>
+                    </div>
+                    <h3 class="card-title">${highlightText(item.title, searchTerm)}</h3>
+                    <p class="card-desc">${highlightText(item.description, searchTerm)}</p>
+                    <div class="architect-note">
+                        <strong><span class="material-icons" style="font-size:12px; vertical-align:middle">stars</span> Recomendación del Arquitecto</strong>
+                        ${highlightText(item.bestPractice, searchTerm)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Helper: Escape Regex characters
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Helper: Highlight search terms
+        function highlightText(text, query) {
+            if (!query) return text;
+            const safeQuery = escapeRegExp(query);
+            const regex = new RegExp(`(${safeQuery})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            searchInput.addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                renderContent();
+            });
+        }
+
+        // Actions
+        window.setCategory = function(cat) {
+            currentCategory = cat;
+            renderSidebar(); // Re-render to update active class
+            renderContent();
+
+            // On mobile, scroll to top of content
+            if (window.innerWidth <= 768) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        // Start App
+        init();
+
+    </script>
+</body>
+</html>
