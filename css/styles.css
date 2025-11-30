@@ -194,14 +194,20 @@ main {
 }
 
 /* Dynamic Tag Colors based on Category */
+/* Note: JS removes spaces for class name: 'Bases de Datos' -> 'BasesdeDatos' */
+
 .tag.Gobierno { background: #E8F0FE; color: var(--g-blue); }
-.tag.FinOps { background: #FCE8E6; color: var(--g-red); }
-.tag.Computo { background: #E6F4EA; color: var(--g-green); }
-.tag.Datos { background: #FEF7E0; color: var(--g-yellow); }
 .tag.Networking { background: #E8F0FE; color: #1A73E8; }
 .tag.Seguridad { background: #3c4043; color: #fff; }
-.tag.Desarrollo { background: #f3e8fd; color: #9334e6; } /* Purple for Dev */
-.tag.Arquitectura { background: #e8eaed; color: #202124; border: 1px solid #dadce0; } /* Gray/Neutral */
+.tag.Computo { background: #E6F4EA; color: var(--g-green); }
+.tag.Desarrollo { background: #f3e8fd; color: #9334e6; } /* Purple */
+.tag.BasesdeDatos { background: #feefe3; color: #e37400; } /* Orange */
+.tag.Analytics { background: #FEF7E0; color: var(--g-yellow); } /* Yellow */
+
+/* Legacy / Fallback */
+.tag.FinOps { background: #FCE8E6; color: var(--g-red); }
+.tag.Datos { background: #FEF7E0; color: var(--g-yellow); }
+.tag.Arquitectura { background: #e8eaed; color: #202124; border: 1px solid #dadce0; }
 
 .card-title {
     font-size: 1.25rem;
