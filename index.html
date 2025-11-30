@@ -202,13 +202,15 @@
             text-transform: uppercase;
         }
 
+        /* Dynamic Tag Colors based on Category */
         .tag.Gobierno { background: #E8F0FE; color: var(--g-blue); }
         .tag.FinOps { background: #FCE8E6; color: var(--g-red); }
-        .tag.Ingeniería { background: #E6F4EA; color: var(--g-green); }
         .tag.Computo { background: #E6F4EA; color: var(--g-green); }
         .tag.Datos { background: #FEF7E0; color: var(--g-yellow); }
         .tag.Networking { background: #E8F0FE; color: #1A73E8; }
         .tag.Seguridad { background: #3c4043; color: #fff; }
+        .tag.Desarrollo { background: #f3e8fd; color: #9334e6; } /* Purple for Dev */
+        .tag.Arquitectura { background: #e8eaed; color: #202124; border: 1px solid #dadce0; } /* Gray/Neutral */
 
         .card-title {
             font-size: 1.25rem;
@@ -300,144 +302,242 @@
         // DATA STORE (The "Brain")
         // ==========================================
         const gcpData = [
-            // --- GOBIERNO ---
+            // --- GOBIERNO (Expanded) ---
             {
                 id: 1,
                 category: "Gobierno",
                 title: "Resource Hierarchy",
-                description: "La estructura base de GCP: Organización -> Carpetas -> Proyectos -> Recursos. Es fundamental para la herencia de políticas y control de acceso.",
-                bestPractice: "Utiliza Carpetas (Folders) para reflejar unidades de negocio o entornos (Prod, Dev). Nunca asignes permisos directamente a nivel de Organización a usuarios individuales, usa Grupos.",
-                tags: ["iam", "organization", "projects", "folders"]
+                description: "La estructura base de GCP: Organización -> Carpetas -> Proyectos -> Recursos. Fundamental para la herencia de políticas.",
+                bestPractice: "Utiliza Carpetas para reflejar unidades de negocio o entornos (Prod, Dev). Usa 'Tags' para control granular de políticas.",
+                tags: ["iam", "organization", "folders"]
             },
             {
                 id: 2,
                 category: "Gobierno",
-                title: "IAM Best Practices",
-                description: "Identity and Access Management controla quién puede hacer qué en qué recursos. El error más común es el exceso de permisos.",
-                bestPractice: "Aplica el Principio de Menor Privilegio (PoLP). Evita roles primitivos (Owner, Editor, Viewer). Usa Roles Predefinidos y Custom Roles solo cuando sea estrictamente necesario.",
-                tags: ["security", "access", "roles", "polp"]
+                title: "IAM Best Practices & Conditions",
+                description: "Gestión de identidades. IAM Conditions permite otorgar acceso solo si se cumplen ciertos criterios (ej: hora del día, IP).",
+                bestPractice: "Aplica el Principio de Menor Privilegio (PoLP). Usa IAM Conditions para accesos temporales y evita Service Accounts Keys permanentes.",
+                tags: ["security", "access", "conditions"]
             },
             {
                 id: 3,
                 category: "Gobierno",
-                title: "Organization Policies",
-                description: "Proporciona control centralizado y programático sobre los recursos de la nube. Restringe configuraciones a nivel de recurso.",
-                bestPractice: "Define 'Constraints' globales al inicio. Ej: Restringir ubicaciones de recursos (Location Restriction) o inhabilitar la creación de claves de cuentas de servicio externas.",
-                tags: ["compliance", "constraints", "security"]
-            },
-
-            // --- FINOPS ---
-            {
-                id: 4,
-                category: "FinOps",
-                title: "Billing Export to BigQuery",
-                description: "Permite un análisis granular de costos exportando los logs de facturación a BigQuery.",
-                bestPractice: "Actívalo desde el DÍA 1. Los datos no son retroactivos. Úsalo para crear dashboards personalizados en Looker Studio y detectar anomalías de costos por etiqueta.",
-                tags: ["cost", "billing", "bigquery", "analytics"]
+                title: "Organization Policies (Constraints)",
+                description: "Control centralizado sobre recursos. Restringe configuraciones físicas y lógicas.",
+                bestPractice: "Aplica restricciones críticas: 'Domain Restricted Sharing', 'Trusted Image Projects' y 'Disable External IP for Compute Engines' por defecto.",
+                tags: ["compliance", "security"]
             },
             {
-                id: 5,
-                category: "FinOps",
-                title: "Budgets & Alerts",
-                description: "Mecanismo para monitorear el gasto contra un presupuesto definido y enviar notificaciones.",
-                bestPractice: "Vincula las alertas a un tópico de Pub/Sub para automatizar acciones (ej: apagar recursos de desarrollo si se supera el 100% del presupuesto) usando Cloud Functions.",
-                tags: ["cost", "automation", "alerts", "pubsub"]
+                id: 17,
+                category: "Gobierno",
+                title: "Infrastructure as Code (IaC) - Terraform",
+                description: "Gestión de infraestructura mediante código declarativo. Es el estándar de facto en GCP.",
+                bestPractice: "Almacena el estado de Terraform en un Bucket de GCS con versionado activado. Usa módulos para estandarizar recursos y 'Service Account Impersonation' para ejecutar los planes.",
+                tags: ["terraform", "automation", "devops"]
+            },
+            {
+                id: 18,
+                category: "Gobierno",
+                title: "Workload Identity Federation",
+                description: "Permite acceder a recursos de GCP desde AWS, Azure o On-prem sin descargar claves de Service Accounts.",
+                bestPractice: "ELIMINA las claves de cuentas de servicio (JSON keys) de tus repositorios. Usa Workload Identity para autenticar pipelines de CI/CD (GitHub Actions, GitLab).",
+                tags: ["security", "auth", "multi-cloud"]
+            },
+            {
+                id: 19,
+                category: "Gobierno",
+                title: "Cloud Asset Inventory",
+                description: "Servicio para monitorizar y analizar todos los recursos y políticas de IAM en tiempo real.",
+                bestPractice: "Configura feeds de notificación para detectar cambios críticos en la infraestructura (ej: un firewall abierto al mundo) y disparar una Cloud Function de remediación.",
+                tags: ["inventory", "monitoring", "security"]
             },
 
-            // --- INGENIERÍA / CÓMPUTO ---
+            // --- ARQUITECTURA (New & Expanded) ---
+            {
+                id: 33,
+                category: "Arquitectura",
+                title: "Regional vs Zonal vs Global",
+                description: "Entender el alcance de falla de los recursos. Zonal (VM), Regional (Subnet, App Engine), Global (VPC, Pub/Sub).",
+                bestPractice: "Diseña para fallas zonales como mínimo. Para alta disponibilidad (HA), distribuye recursos en múltiples zonas dentro de una región. Para DR crítico, usa multi-región.",
+                tags: ["ha", "reliability", "dr"]
+            },
+            {
+                id: 34,
+                category: "Arquitectura",
+                title: "Disaster Recovery Patterns",
+                description: "Estrategias de recuperación: Cold, Warm y Hot standby.",
+                bestPractice: "Define tu RTO y RPO antes de elegir. Para bases de datos, Cloud SQL HA (Regional) cubre la mayoría de casos. Spanner ofrece consistencia global para requisitos extremos.",
+                tags: ["dr", "rto", "rpo"]
+            },
+            {
+                id: 35,
+                category: "Arquitectura",
+                title: "Private Service Connect",
+                description: "Conexión privada a servicios de Google y de terceros sin usar direcciones IP públicas ni peering complejo.",
+                bestPractice: "Úsalo en lugar de VPC Peering cuando necesites consumir un servicio en otra VPC (incluso de otra organización) sin preocuparte por la superposición de IPs (CIDR overlap).",
+                tags: ["networking", "security", "privatelink"]
+            },
+            {
+                id: 36,
+                category: "Arquitectura",
+                title: "Serverless Event-Driven (Eventarc)",
+                description: "Arquitecturas reactivas que escalan a cero. Eventarc unifica la entrega de eventos desde Google, SaaS y aplicaciones propias.",
+                bestPractice: "Desacopla servicios usando Pub/Sub y Eventarc. Esto permite que los equipos evolucionen independientemente y el sistema sea más resiliente a picos de tráfico.",
+                tags: ["serverless", "events", "microservices"]
+            },
+            {
+                id: 37,
+                category: "Arquitectura",
+                title: "Microservices & Service Mesh",
+                description: "Gestión de comunicación entre microservicios (mTLS, observabilidad, traffic splitting).",
+                bestPractice: "No implementes Istio/Anthos Service Mesh prematuramente. Comienza con servicios bien definidos en Cloud Run o GKE estándar. Adopta Mesh solo cuando la complejidad de red lo justifique.",
+                tags: ["k8s", "istio", "anthos"]
+            },
+            {
+                id: 38,
+                category: "Arquitectura",
+                title: "Cost Optimization (CUDs)",
+                description: "Estrategias financieras para reducir la factura de nube.",
+                bestPractice: "Analiza 'Recommendations AI'. Compromete uso (Committed Use Discounts) solo para cargas base estables (cómputo/base de datos) por 1 o 3 años para ahorrar hasta un 50-70%.",
+                tags: ["finops", "billing", "saving"]
+            },
+             {
+                id: 39,
+                category: "Arquitectura",
+                title: "Hybrid Connectivity",
+                description: "Conectar On-premise con GCP: Cloud VPN (HA) vs Cloud Interconnect (Dedicated/Partner).",
+                bestPractice: "Usa VPN HA para cargas menores a 3 Gbps o backups. Para latencia baja y alto throughput crítico, invierte en Interconnect. Siempre diseña redundancia (99.99% SLA requiere 2 interconexiones en 2 metros).",
+                tags: ["hybrid", "network", "mpls"]
+            },
+
+            // --- DESARROLLO (New Category) ---
+            {
+                id: 25,
+                category: "Desarrollo",
+                title: "Cloud Build (CI/CD Serverless)",
+                description: "Plataforma de integración y despliegue continuo totalmente gestionada.",
+                bestPractice: "Usa 'Private Pools' si necesitas acceder a recursos dentro de tu VPC durante el build. Integra chequeos de seguridad (Container Analysis) en el pipeline antes de desplegar.",
+                tags: ["cicd", "devops", "automation"]
+            },
+            {
+                id: 26,
+                category: "Desarrollo",
+                title: "Artifact Registry",
+                description: "El sucesor de Container Registry. Almacena imágenes Docker, paquetes Maven, npm, etc.",
+                bestPractice: "Utiliza repositorios remotos en Artifact Registry para cachear dependencias públicas (proxy) y evitar errores de 'rate limit' o caídas de repositorios públicos externos.",
+                tags: ["containers", "dependencies", "security"]
+            },
+            {
+                id: 27,
+                category: "Desarrollo",
+                title: "Cloud Functions (2nd Gen)",
+                description: "FaaS basado en Knative. Mayor concurrencia, tiempos de ejecución más largos y triggers de Eventarc.",
+                bestPractice: "Prefiere 2nd Gen sobre 1st Gen. Usa Cloud Functions para 'pegamento' (glue code) y tareas ligeras basadas en eventos. Para APIs REST complejas, prefiere Cloud Run.",
+                tags: ["serverless", "faas", "python", "node"]
+            },
+            {
+                id: 28,
+                category: "Desarrollo",
+                title: "Firestore vs Cloud SQL",
+                description: "NoSQL (Documentos) vs Relacional (SQL). Firestore escala horizontalmente casi infinitamente.",
+                bestPractice: "Usa Firestore para backends de apps móviles, perfiles de usuario y catálogos en tiempo real. Usa Cloud SQL (PostgreSQL) si necesitas transacciones complejas, ACID estricto y esquemas relacionales.",
+                tags: ["database", "nosql", "sql"]
+            },
+             {
+                id: 29,
+                category: "Desarrollo",
+                title: "API Gateway & Apigee",
+                description: "Gestión de APIs. API Gateway es ligero (basado en Envoy). Apigee es empresarial completo.",
+                bestPractice: "Para microservicios internos o exposiciones simples, API Gateway es suficiente. Si necesitas monetización, portal de desarrolladores y analítica profunda, salta a Apigee.",
+                tags: ["api", "rest", "management"]
+            },
+            {
+                id: 30,
+                category: "Desarrollo",
+                title: "Cloud Code & IDEs",
+                description: "Plugin para VS Code e IntelliJ que facilita el desarrollo en Kubernetes y Cloud Run.",
+                bestPractice: "Instala Cloud Code para tener 'skaffold' integrado. Permite bucles de desarrollo rápidos (hot reload) en clústeres remotos de desarrollo sin tener que reconstruir Dockerfiles manualmente.",
+                tags: ["ide", "productivity", "k8s"]
+            },
+             {
+                id: 31,
+                category: "Desarrollo",
+                title: "Debugging & Profiling",
+                description: "Herramientas de Cloud Operations para inspeccionar código en producción sin detenerlo.",
+                bestPractice: "Usa Cloud Profiler continuamente (bajo overhead) para detectar cuellos de botella de CPU/RAM. Cloud Trace es obligatorio para arquitecturas de microservicios distribuidos.",
+                tags: ["observability", "debug", "performance"]
+            },
+
+            // --- COMPUTO (Existing + Refined) ---
             {
                 id: 6,
                 category: "Computo",
                 title: "GKE vs Cloud Run",
-                description: "GKE es Kubernetes gestionado (mayor control). Cloud Run es Serverless para contenedores (mayor simplicidad).",
-                bestPractice: "Empieza con Cloud Run si tu app es stateless y orientada a eventos/web. Mueve a GKE si necesitas GPUs, protocolos de red complejos o persistencia de estado complicada.",
-                tags: ["kubernetes", "serverless", "containers", "docker"]
+                description: "GKE es Kubernetes estándar. Cloud Run es Knative serverless.",
+                bestPractice: "Empieza con Cloud Run. Migra a GKE Autopilot si necesitas control de red avanzado. GKE Standard solo para casos muy específicos de personalización de nodos.",
+                tags: ["kubernetes", "containers"]
             },
-            {
-                id: 7,
-                category: "Computo",
-                title: "App Engine (Standard vs Flexible)",
-                description: "PaaS original de Google. Standard escala a 0 y es muy rápido. Flexible usa contenedores Docker.",
-                bestPractice: "Para aplicaciones legacy o monolitos, App Engine sigue siendo viable, pero para nuevos desarrollos, prefiere Cloud Run por su portabilidad y modelo de precios.",
-                tags: ["paas", "web", "scaling"]
-            },
-            {
+             {
                 id: 8,
                 category: "Computo",
-                title: "Compute Engine (GCE) Spot VMs",
-                description: "Máquinas virtuales con grandes descuentos pero que pueden ser interrumpidas por Google.",
-                bestPractice: "Úsalas solo para cargas de trabajo tolerantes a fallos (batch processing, renderizado, nodos GKE secundarios). Configura scripts de apagado para guardar estado.",
-                tags: ["iaas", "vm", "cost-saving"]
+                title: "Compute Engine (Spot VMs)",
+                description: "VMs preemtibles con hasta 91% de descuento.",
+                bestPractice: "Ideales para trabajos batch o renderizado. Usa 'Managed Instance Groups' (MIGs) para reponer automáticamente las instancias si Google las reclama.",
+                tags: ["vm", "cost"]
             },
 
-            // --- DATOS ---
-            {
-                id: 9,
-                category: "Datos",
-                title: "BigQuery Optimization",
-                description: "Data Warehouse serverless. Los costos pueden dispararse si las queries escanean demasiados datos.",
-                bestPractice: "SIEMPRE usa tablas particionadas (por fecha/tiempo) y clústeres. Evita 'SELECT *'. Usa vistas materializadas para agregaciones comunes.",
-                tags: ["analytics", "sql", "performance", "cost"]
-            },
-            {
-                id: 10,
-                category: "Datos",
-                title: "Dataflow",
-                description: "Servicio de procesamiento de datos stream y batch basado en Apache Beam.",
-                bestPractice: "Usa Flex Templates para reutilizar pipelines. Habilita Dataflow Prime para auto-tuning de recursos y gestión vertical de memoria en workers.",
-                tags: ["etl", "streaming", "apache-beam"]
-            },
-            {
-                id: 11,
-                category: "Datos",
-                title: "Cloud Storage Classes",
-                description: "Standard, Nearline, Coldline, Archive. Diferentes costos de almacenamiento y acceso.",
-                bestPractice: "Configura 'Lifecycle Policies' para mover objetos automáticamente a clases más frías después de X días. No uses Archive para backups que necesitas restaurar frecuentemente.",
-                tags: ["storage", "buckets", "lifecycle"]
-            },
-
-            // --- NETWORKING ---
+            // --- NETWORKING (Existing +) ---
             {
                 id: 12,
                 category: "Networking",
                 title: "VPC Design & Subnets",
-                description: "La red virtual global. Las subredes son regionales.",
-                bestPractice: "Usa el modo 'Custom' al crear VPCs para tener control total sobre los rangos IP. Evita superposiciones de IP si planeas conectar con on-premise o VPC Peering.",
-                tags: ["vpc", "ip-addressing", "infrastructure"]
-            },
-            {
-                id: 13,
-                category: "Networking",
-                title: "Shared VPC",
-                description: "Permite compartir una red VPC (Host Project) con otros proyectos (Service Projects).",
-                bestPractice: "Es el estándar para organizaciones medianas/grandes. Centraliza la administración de red y seguridad (firewalls) mientras delega la gestión de recursos a los equipos de desarrollo.",
-                tags: ["vpc", "organization", "governance"]
-            },
-            {
-                id: 14,
-                category: "Networking",
-                title: "VPC Peering vs VPN",
-                description: "Peering conecta dos VPCs de Google privadamente. VPN conecta VPC con redes externas u otras nubes.",
-                bestPractice: "El Peering no es transitivo. Si A conecta con B y B con C, A no ve a C. Usa Network Connectivity Center o VPN HA para topologías más complejas (Hub & Spoke).",
-                tags: ["connectivity", "hybrid", "routing"]
+                description: "Red definida por software global.",
+                bestPractice: "Planifica tu direccionamiento IP con cuidado (evita superposiciones). Usa 'Private Google Access' para que las VMs sin IP pública accedan a las APIs de Google.",
+                tags: ["vpc", "ip"]
             },
             {
                 id: 15,
                 category: "Networking",
-                title: "Cloud Load Balancing",
-                description: "Balanceo de carga global a través de una sola IP Anycast.",
-                bestPractice: "Usa HTTP(S) Load Balancer global para servir contenido cerca del usuario (CDN integrado). Usa Internal Load Balancer para microservicios internos.",
-                tags: ["performance", "cdn", "scale"]
+                title: "Cloud Load Balancing (GSLB)",
+                description: "Balanceo global Anycast.",
+                bestPractice: "Usa HTTPS LB Global con Cloud CDN activado para entregar contenido estático. Cloud Armor (WAF) se integra aquí para protección DDoS y OWASP Top 10.",
+                tags: ["lb", "security", "cdn"]
             },
 
-            // --- SEGURIDAD ---
+            // --- DATOS (Existing +) ---
+            {
+                id: 9,
+                category: "Datos",
+                title: "BigQuery (Data Warehouse)",
+                description: "Analítica a escala de petabytes.",
+                bestPractice: "Optimiza costos: 1) Particiona tablas por fecha. 2) Clustered tables. 3) Usa 'Preview' en lugar de Select *. 4) Configura expiración de tablas temporales.",
+                tags: ["analytics", "sql"]
+            },
+            {
+                id: 10,
+                category: "Datos",
+                title: "Dataflow (Apache Beam)",
+                description: "Procesamiento unificado Batch y Stream.",
+                bestPractice: "Para pipelines simples de movimiento de datos, prefiere las plantillas de Dataflow (Templates) antes que escribir código Beam desde cero.",
+                tags: ["etl", "stream"]
+            },
+
+             // --- SEGURIDAD (Existing +) ---
             {
                 id: 16,
                 category: "Seguridad",
                 title: "VPC Service Controls",
-                description: "Perímetro de seguridad alrededor de los servicios API de Google (como BigQuery o Storage).",
-                bestPractice: "Esencial para mitigar la exfiltración de datos. Configura perímetros para asegurar que los datos solo se acceden desde redes autorizadas, incluso con credenciales válidas.",
-                tags: ["security", "perimeter", "dlp"]
+                description: "Perímetro de seguridad para datos.",
+                bestPractice: "Es la defensa más fuerte contra exfiltración. Úsalo para 'encerrar' BigQuery y Storage de modo que solo sean accesibles desde redes confiables, bloqueando accesos públicos incluso con credenciales robadas.",
+                tags: ["perimeter", "dlp"]
+            },
+            {
+                id: 41,
+                category: "Seguridad",
+                title: "Secret Manager",
+                description: "Almacenamiento seguro de claves API, passwords y certificados.",
+                bestPractice: "Nunca guardes secretos en variables de entorno en texto plano. Inyectalos en tiempo de ejecución en Cloud Run/Functions como volúmenes montados o variables de entorno desde Secret Manager.",
+                tags: ["secrets", "devsecops"]
             }
         ];
 
